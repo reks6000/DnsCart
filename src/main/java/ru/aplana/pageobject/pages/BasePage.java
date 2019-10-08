@@ -8,8 +8,6 @@ import ru.aplana.pageobject.Cart;
 import ru.aplana.pageobject.Framework;
 import ru.aplana.pageobject.Init;
 
-import static java.lang.Thread.sleep;
-
 public class BasePage {
     WebDriver driver;
     Framework fw;
@@ -39,8 +37,7 @@ public class BasePage {
         return new SearchResultsPage();
     }
 
-    public void checkCartPrice() throws Exception{
-        sleep(1000);
+    public void checkCartPrice() {
         Integer realPrice = Integer.parseInt(fw.getText(cartPrice).replace(" ", ""));
         Integer assumedPrice = cart.getPrice();
         if (!realPrice.equals(assumedPrice)) {

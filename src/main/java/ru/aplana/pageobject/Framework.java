@@ -2,6 +2,7 @@ package ru.aplana.pageobject;
 
 import junit.framework.ComparisonFailure;
 import org.openqa.selenium.By;
+import org.openqa.selenium.StaleElementReferenceException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
@@ -15,15 +16,20 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.openqa.selenium.support.ui.ExpectedConditions.not;
 
 
 public class Framework {
-    WebDriver driver;
-    Wait<WebDriver> wait;
+    private TestProperties props = TestProperties.getInstance();
+    private WebDriver driver;
+    private Wait<WebDriver> wait;
+    private Wait<WebDriver> verifyWait;
 
-    public Framework(WebDriver driver, Wait<WebDriver> wait) {
+
+    public Framework(WebDriver driver, Wait<WebDriver> wait, Wait<WebDriver> verifyWait) {
         this.driver = driver;
         this.wait = wait;
+        this.verifyWait = verifyWait;
     }
 
     public WebElement wait(String xpath) {
@@ -35,6 +41,51 @@ public class Framework {
     public WebElement wait(WebElement element) {
         wait.until(ExpectedConditions.visibilityOf(element));
         return element;
+    }
+
+    public WebElement waitForChange(String xpath, String oldValue) {
+        WebElement element = driver.findElement(By.xpath(xpath));
+        wait.until(not(ExpectedConditions.attributeToBe(element, "innerText", oldValue)));
+        return element;
+    }
+
+    public WebElement waitForChange(WebElement element, String oldValue) {
+        wait.until(not(ExpectedConditions.attributeToBe(element, "innerText", oldValue)));
+        return element;
+    }
+
+    public boolean waitForDelete(String xpath) {
+        WebElement element = null;
+        boolean deleted = false;
+        try {
+            element = driver.findElement(By.xpath(xpath));
+            wait.until(not(ExpectedConditions.visibilityOf(element)));
+        } catch (StaleElementReferenceException e) {
+            deleted = true;
+        }
+        return deleted;
+    }
+
+    public boolean waitForDelete(WebElement element) {
+        boolean deleted = false;
+        try {
+            wait.until(not(ExpectedConditions.visibilityOf(element)));
+        } catch (StaleElementReferenceException e) {
+            deleted = true;
+        }
+        return deleted;
+    }
+
+    public boolean verify(WebElement element) {
+        boolean res = true;
+        driver.manage().timeouts().implicitlyWait(0, TimeUnit.SECONDS);
+        try {
+            verifyWait.until(ExpectedConditions.visibilityOf(element));
+        } catch (org.openqa.selenium.TimeoutException e) {
+            res = false;
+        }
+        driver.manage().timeouts().implicitlyWait(Integer.parseInt(props.getProperty("timeout.global")), TimeUnit.SECONDS);
+        return res;
     }
 
     public String getText(String xpath) {
@@ -117,16 +168,6 @@ public class Framework {
             driver.quit();
             throw new Error();
         }
-    }
-
-    public boolean verify(WebElement element) {
-        boolean res = true;
-        try {
-            wait.until(ExpectedConditions.visibilityOf(element));
-        } catch (org.openqa.selenium.TimeoutException e) {
-            res = false;
-        }
-        return res;
     }
 
     public void checkArray(String xpath, ArrayList<String> keys) {

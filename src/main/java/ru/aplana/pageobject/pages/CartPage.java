@@ -6,8 +6,6 @@ import org.openqa.selenium.support.FindBy;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.lang.Thread.sleep;
-
 public class CartPage extends BasePage{
     int guaranteePriceIndex = 0;
     ArrayList<Integer> guaranteePrices = new ArrayList<>();
@@ -44,8 +42,7 @@ public class CartPage extends BasePage{
         }
     }
 
-    public void checkSum() throws Exception{
-        sleep(500);
+    public void checkSum() {
         countGuaranteePrices();
         for (int i = 0; i < prices.size(); i++) {
             Integer realPrice = Integer.parseInt(fw.getText(prices.get(i)).replace(" ", ""));
@@ -63,31 +60,36 @@ public class CartPage extends BasePage{
         checkCartPrice();
     }
 
-    public CartPage deleteItem(String name) throws Exception {
+    public CartPage deleteItem(String name) {
         for (int i = 0; i < productsNames.size(); i++) {
             if (fw.getText(productsNames.get(i)).equals(name)) {
-                fw.waitAndClick(removeButtons.get(i));
+                if(!fw.waitForDelete(fw.waitAndClick(removeButtons.get(i)))) {
+                    System.err.println("Error: element not deleted");
+                    driver.quit();
+                    throw new Error();
+                }
             }
         }
         cart.remove(name);
-        sleep(500);
         return new CartPage();
     }
 
-    public void addItem(String name) throws Exception{
+    public void addItem(String name) {
+        String oldValue = fw.getText(cartPrice);
         for (int i = 0; i < productsNames.size(); i++) {
             if (fw.getText(productsNames.get(i)).equals(name)) {
                 fw.waitAndClick(addButtons.get(i));
             }
         }
         cart.addProduct(name);
-        sleep(3000);
+        fw.waitForChange(cartPrice, oldValue);
     }
 
-    public CartPage returnDeleted() throws Exception {
+    public CartPage returnDeleted() {
+        String oldValue = fw.getText(cartPrice);
         fw.waitAndClick(returnDeletedButton);
         cart.returnDeleted();
-        sleep(500);
+        fw.waitForChange(cartPrice, oldValue);
         return new CartPage();
     }
 }

@@ -1,0 +1,3 @@
+В класс Framework добавлены методы waitForChange и waitForDelete
+Во всех методах sleep заменён на соответствующий wait
+Метод verify класса Framework получил собственный Wait<WebDriver> verifyWait для более быстрой обработки

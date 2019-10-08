@@ -18,16 +18,11 @@ public class ItemPage extends BasePage {
     @FindBy(xpath = "//button[@class='btn btn-cart btn-lg']")
     WebElement addToCartButton;
 
-    public void changeGuaranteeAndCheck(String key) throws Exception{
+    public void changeGuaranteeAndCheck(String key) {
         if (fw.verify(guaranteeField)) {
-            Integer oldPrice = Integer.parseInt(fw.getText(priceField).replace(" ", ""));
+            String oldValue = fw.getText(priceField);
             fw.select(guaranteeField, key);
-            Integer newPrice = Integer.parseInt(fw.getText(priceField).replace(" ", ""));
-            if (oldPrice.equals(newPrice)) {
-                System.err.println("Error: price not changed");
-                driver.quit();
-                throw new Error();
-            }
+            fw.waitForChange(priceField, oldValue);
         } else {
             System.err.println("Error: no guarantee field");
             driver.quit();
@@ -36,6 +31,7 @@ public class ItemPage extends BasePage {
     }
 
     public void addToCart(){
+        String oldValue = fw.getText(cartPrice);
         String name = fw.getText(nameField);
         int price = Integer.parseInt(fw.getText(priceField).replace(" ", ""));
         String guarantee = "";
@@ -45,5 +41,6 @@ public class ItemPage extends BasePage {
         fw.waitAndClick(addToCartButton);
         Product product = new Product(name, price, guarantee);
         cart.add(product);
+        fw.waitForChange(cartPrice, oldValue);
     }
 }
